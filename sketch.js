@@ -1,10 +1,9 @@
-var cols = 50
-var rows = 50
+var cols = 80, rows = 80
 var grid = new Array(cols)
-
-var openSet = []
-var closedSet = []
+var openSet = [], closedSet = []
 var start, end, w, h, path = []
+
+
 
 function heuristic(a, b) {
   // let d = abs(a.i - b.i) + abs(a.j - b.j)
@@ -12,33 +11,35 @@ function heuristic(a, b) {
   return d
 }
 
+
+
 function removeFromArray(arr, el) {
-  for (let i = arr.length - 1; i >= 0; i--) {
-    if (arr[i] == el) {
-      arr.splice(i, 1)
-    }
-  }
+  for (let i = arr.length - 1; i >= 0; i--)
+    if (arr[i] == el) arr.splice(i, 1)
 }
 
+
+
 function Spot(i, j) {
-  this.i = i;
-  this.j = j;
-  this.f = 0
-  this.g = 0
-  this.h = 0
-  this.neighbors = []
+  this.i = i; this.j = j
+  this.f = 0; this.g = 0
+  this.h = 0; this.neighbors = []
   this.previous = undefined
   this.wall = false
 
-  if (random(1) < 0.35) this.wall = true
+  if (random(1) < 0.4) this.wall = true
 
   this.show = function(col) {
-    fill(col)
-
-    if (this.wall) fill(0)
-
-    noStroke()
-    rect(this.i * w, this.j * h, w - 1, h - 1)
+    if (this.wall) {
+      fill(0)
+      noStroke()
+      ellipse(this.i * w + w/2, this.j * h + h/2, w - 1, h - 1)
+    }
+    else {
+      fill(col)
+      noStroke()
+      ellipse(this.i * w + w/2, this.j * h + h/2, w - 1, h - 1)
+    }
   }
 
   this.addNeighbors = function(grid) {
@@ -55,8 +56,10 @@ function Spot(i, j) {
   }
 }
 
+
+
 function setup() {
-  createCanvas(600, 600)
+  createCanvas(700, 700)
   console.log('A*')
   w = width / cols
   h = height / rows
@@ -90,7 +93,7 @@ function draw() {
     var current = openSet[winner]
     if (current === end) {
       noLoop()
-      console.log("DONE!")
+      alert("DONE!")
     }
 
     removeFromArray(openSet, current)
@@ -107,7 +110,7 @@ function draw() {
         if (openSet.includes(neighbor)) {
           if (tempG < neighbor.g) {
             neighbor.g = tempG
-            newPath = true            
+            newPath = true
           }
         }
         else {
@@ -125,12 +128,12 @@ function draw() {
     }
   }
   else {
-    console.log("No Solution!")
+    alert("No Solution!")
     noLoop()
     return
   }
 
-  background(0)
+  background(255)
   for (let i = 0; i < cols; i++)
     for (let j = 0; j < rows; j++)
       grid[i][j].show(color(255))
@@ -150,6 +153,11 @@ function draw() {
     temp = temp.previous
   }
 
+  noFill()
+  stroke(0, 0, 255)
+  strokeWeight(w/2)
+  beginShape()
   for (let i = 0; i < path.length; i++)
-    path[i].show(color(0, 0, 255))
+    vertex(path[i].i * w + w/2, path[i].j * h + h/2)
+  endShape()
 }
