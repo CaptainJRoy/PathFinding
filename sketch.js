@@ -1,10 +1,16 @@
-var cols = 5
-var rows = 5
+var cols = 25
+var rows = 25
 var grid = new Array(cols)
 
 var openSet = []
 var closedSet = []
-var start, end, w, h
+var start, end, w, h, path = []
+
+function heuristic(a, b) {
+  let d = abs(a.i - b.i) + abs(b.j - b.j)
+  // let d = dist(a.i, a.j, b.i, b.j)
+  return d
+}
 
 function removeFromArray(arr, el) {
   for (let i = arr.length - 1; i >= 0; i--) {
@@ -21,6 +27,7 @@ function Spot(i, j) {
   this.g = 0
   this.h = 0
   this.neighbors = []
+  this.previous = undefined
 
   this.show = function(col) {
     fill(col)
@@ -84,13 +91,37 @@ function draw() {
       }
     }
 
-    let current = openSet[winner]
+    var current = openSet[winner]
     if (current === end) {
+      noLoop()
       console.log("DONE!")
     }
 
     removeFromArray(openSet, current)
     closedSet.push(current)
+
+    let neighbors = current.neighbors
+    for (let i = 0; i < neighbors.length; i++) {
+      let neighbor = neighbors[i]
+
+      if (!closedSet.includes(neighbor)) {
+        let tempG = current.g + 1
+
+        if (openSet.includes(neighbor)) {
+          if (tempG < neighbor.g) {
+            neighbor.g = tempG
+          }
+        }
+        else {
+          neighbor.g = tempG
+          openSet.push(neighbor)
+        }
+
+        neighbor.h = heuristic(neighbor, end)
+        neighbor.f = neighbor.g + neighbor.h
+        neighbor.previous = current
+      }
+    }
   }
   else {
 
@@ -109,5 +140,18 @@ function draw() {
 
   for (let i = 0; i < openSet.length; i++) {
     openSet[i].show(color(0, 255, 0))
+  }
+
+  path = []
+  let temp = current
+  path.push(temp)
+
+  while (temp.previous) {
+    path.push(temp.previous)
+    temp = temp.previous
+  }
+
+  for (let i = 0; i < path.length; i++) {
+    path[i].show(color(0, 0, 255))
   }
 }
