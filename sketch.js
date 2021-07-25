@@ -1,17 +1,18 @@
-var cols = 80, rows = 80
+let canvasWidth = window.innerWidth - 20
+let canvasHeight = window.innerHeight - 20
+let cols = Math.floor(canvasWidth / 14)
+let rows = Math.floor(canvasHeight / 14)
+let wallProbability = 0.45
+
 var grid = new Array(cols)
 var openSet = [], closedSet = []
 var start, end, w, h, path = []
-
-
 
 function heuristic(a, b) {
   // let d = abs(a.i - b.i) + abs(a.j - b.j)
   let d = dist(a.i, a.j, b.i, b.j)
   return d
 }
-
-
 
 function removeFromArray(arr, el) {
   for (let i = arr.length - 1; i >= 0; i--)
@@ -20,47 +21,59 @@ function removeFromArray(arr, el) {
 
 
 
-function Spot(i, j) {
-  this.i = i; this.j = j
-  this.f = 0; this.g = 0
-  this.h = 0; this.neighbors = []
-  this.previous = undefined
-  this.wall = false
+class Spot {
+  constructor(i, j) {
+    this.i = i; this.j = j
+    this.f = 0; this.g = 0
+    this.h = 0; this.neighbors = []
+    this.previous = undefined
+    this.wall = false
 
-  if (random(1) < 0.4) this.wall = true
+    if (random(1) < wallProbability) {
+      this.wall = true
+    }
+  };
 
-  this.show = function(col) {
-    if (this.wall) {
-      fill(0)
-      noStroke()
-      ellipse(this.i * w + w/2, this.j * h + h/2, w - 1, h - 1)
-    }
-    else {
-      fill(col)
-      noStroke()
-      ellipse(this.i * w + w/2, this.j * h + h/2, w - 1, h - 1)
-    }
+  show(col) {
+    this.wall ? fill(0) : fill(col)
+    noStroke()
+    ellipse(
+      this.i * w + w/2,
+      this.j * h + h/2,
+      w - 1,
+      h - 1
+    )
   }
 
-  this.addNeighbors = function(grid) {
+  addNeighbors(grid) {
     let i = this.i, j = this.j
 
-    if (i < cols - 1) this.neighbors.push(grid[i + 1][j])
+    if (i < cols - 1) {
+      this.neighbors.push(grid[i + 1][j])
+      
+      if (j > 0) {
+        this.neighbors.push(grid[i + 1][j - 1])
+      }
+
+      if (j < rows - 1) {
+        this.neighbors.push(grid[i + 1][j + 1])
+      }
+    }
+
     if (i > 0) this.neighbors.push(grid[i - 1][j])
     if (j < rows - 1) this.neighbors.push(grid[i][j + 1])
     if (j > 0) this.neighbors.push(grid[i][j - 1])
     if (i > 0 && j > 0) this.neighbors.push(grid[i - 1][j - 1])
-    if (i < cols - 1 && j > 0) this.neighbors.push(grid[i + 1][j - 1])
     if (i > 0 && j < rows - 1) this.neighbors.push(grid[i - 1][j + 1])
-    if (i < cols - 1 && j < rows - 1) this.neighbors.push(grid[i + 1][j + 1])
   }
 }
 
 
 
 function setup() {
-  createCanvas(700, 700)
-  console.log('A*')
+  let canvas = createCanvas(canvasWidth, canvasHeight)
+  canvas.parent("p5Canvas")
+
   w = width / cols
   h = height / rows
 
@@ -75,8 +88,10 @@ function setup() {
     for (let j = 0; j < rows; j++)
       grid[i][j].addNeighbors(grid)
 
-  start = grid[0][0]; start.wall = false
-  end = grid[cols - 1][rows - 1]; end.wall = false
+  start = grid[0][0]
+  start.wall = false
+  end = grid[cols - 1][rows - 1]
+  end.wall = false
 
   openSet.push(start)
 }
@@ -91,13 +106,16 @@ function draw() {
         winner = i
 
     var current = openSet[winner]
-    if (current === end) {
-      noLoop()
-      alert("DONE!")
-    }
-
     removeFromArray(openSet, current)
     closedSet.push(current)
+
+    if (current === end) {
+      noLoop()
+      let confirmation = confirm("Solution found. Click OK to regenerate canvas or Cancel to stay in the page!")
+      if (confirmation) {
+        window.location.reload()
+      }
+    }
 
     let neighbors = current.neighbors
     for (let i = 0; i < neighbors.length; i++) {
@@ -128,9 +146,11 @@ function draw() {
     }
   }
   else {
-    alert("No Solution!")
     noLoop()
-    return
+    let confirmation = confirm("No solution found. Click OK to regenerate canvas or Cancel to stay in the page!")
+    if (confirmation) {
+      window.location.reload()
+    }
   }
 
   background(255)
